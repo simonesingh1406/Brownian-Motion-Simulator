@@ -258,3 +258,214 @@ Despite the increment distributions being fundamentally different:
 - quadratic variation still stabilises near T.
 
 This illustrates the universality of Brownian scaling limits and demonstrates that large-scale stochastic behaviour depends primarily on low-order moments rather than precise microscopic distributions.
+
+---
+
+# Experiment 5 — Mean-Reverting Dynamics in Ornstein–Uhlenbeck Processes
+
+## Motivation
+
+The Ornstein–Uhlenbeck (OU) process is one of the most important mean-reverting stochastic systems.
+
+Applications include:
+- statistical arbitrage,
+- interest-rate modelling,
+- stochastic volatility,
+- physical diffusion systems,
+- time-series dynamics.
+
+This experiment investigates:
+- mean reversion,
+- stochastic fluctuations,
+- exact simulation,
+- Euler discretization.
+
+---
+
+## OU Dynamics
+
+The OU process satisfies:
+
+- drift toward long-run mean μ,
+- stochastic diffusion,
+- stationary long-run behaviour.
+
+The process evolves according to:
+- reversion speed θ,
+- volatility σ,
+- equilibrium level μ.
+
+---
+
+## Simulation Methodology
+
+Two simulation schemes are compared:
+1. Exact discretization.
+2. Euler–Maruyama approximation.
+
+This allows comparison between:
+- exact stochastic dynamics,
+- numerical approximation error.
+
+---
+
+## OU Trajectories
+
+![OU Dynamics](plots/ou_exact_vs_euler.png)
+
+---
+
+## Observations
+
+The trajectories fluctuate randomly while repeatedly reverting toward the equilibrium level μ.
+
+Increasing θ strengthens mean reversion, while increasing σ amplifies stochastic variability.
+
+The exact and Euler schemes remain close for sufficiently small time steps.
+
+---
+
+# Experiment 6 — Distinct Dynamical Regimes with Identical Stationary Distributions
+
+## Motivation
+
+Stochastic systems can possess identical stationary distributions while exhibiting fundamentally different temporal dynamics.
+
+This experiment investigates:
+- slow mean reversion,
+- rapid mean reversion,
+- dependence structure,
+- dynamical memory effects.
+
+---
+
+## Theory
+
+For an OU process, the stationary variance is:
+
+- σ² / (2θ)
+
+Different parameter combinations may therefore produce:
+- identical stationary distributions,
+- different pathwise behaviour.
+
+---
+
+## Dynamical Comparison
+
+![OU Stationary](plots/ou_same_stationary.png)
+
+---
+
+## Observations
+
+Although both processes share the same stationary variance:
+- one process reverts slowly,
+- the other reverts rapidly.
+
+This illustrates that stationary distributions alone do not fully characterise stochastic dynamics.
+
+Temporal dependence structure remains critically important.
+
+---
+
+# Experiment 7 — Covariance Decay and Temporal Dependence in OU Processes
+
+## Motivation
+
+Temporal dependence plays a central role in stochastic systems and time-series modelling.
+
+This experiment investigates:
+- covariance decay,
+- memory structure,
+- dependence persistence,
+- effects of mean-reversion speed.
+
+---
+
+## Covariance Structure
+
+The covariance of an OU process decays exponentially:
+
+- faster decay → weaker memory,
+- slower decay → stronger persistence.
+
+The reversion parameter θ controls dependence decay.
+
+---
+
+## Covariance Decay
+
+![Covariance Decay](plots/ou_covariance_decay.png)
+
+---
+
+## Observations
+
+Processes with stronger mean reversion exhibit more rapid covariance decay.
+
+This demonstrates how reversion speed controls:
+- memory persistence,
+- temporal dependence,
+- stochastic correlation structure.
+
+---
+
+# Experiment 8 — Ergodicity and Long-Run Stationary Behaviour
+
+## Motivation
+
+Ergodicity is a fundamental concept in stochastic dynamics.
+
+An ergodic process allows:
+- long-run time averages,
+- statistical ensemble averages
+
+to coincide asymptotically.
+
+This experiment investigates:
+- long-run OU trajectories,
+- convergence of running averages,
+- stationary equilibrium behaviour,
+- ergodic convergence.
+
+---
+
+## Theory
+
+The Ornstein–Uhlenbeck process is ergodic under standard conditions.
+
+As time increases:
+- transient initial conditions disappear,
+- trajectories repeatedly revisit the equilibrium region,
+- long-run averages converge toward the stationary expectation.
+
+This property is fundamental for:
+- statistical estimation,
+- Monte Carlo simulation,
+- stochastic equilibrium systems.
+
+---
+
+## Long-Run Trajectory
+
+![Ergodic Trajectory](plots/ou_ergodic_trajectory.png)
+
+---
+
+## Running Average Convergence
+
+![Running Average](plots/ou_running_average.png)
+
+---
+
+## Observations
+
+The running average converges progressively toward the stationary mean μ.
+
+This demonstrates:
+- disappearance of initial-condition effects,
+- long-run equilibrium behaviour,
+- ergodic convergence of stochastic trajectories.
+
+The experiment illustrates how long-run statistical structure emerges from stochastic dynamics.
