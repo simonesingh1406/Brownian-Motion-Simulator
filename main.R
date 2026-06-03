@@ -121,6 +121,16 @@ for (i in seq_along(n_values)) {
   mean_sup_error[i] <- mean(sup_errors)
 }
 
+# Printing convergence rate
+if (i > 1) {
+  rate <- log(mean_sup_error[i-1] / mean_sup_error[i]) / 
+          log(n_values[i] / n_values[i-1])
+  cat(sprintf("n=%d: mean sup error = %.4f (convergence rate ~ n^{-%.2f})\n", 
+              n_values[i], mean_sup_error[i], rate))
+} else {
+  cat(sprintf("n=%d: mean sup error = %.4f\n", n_values[i], mean_sup_error[i]))
+}
+
 png("plots/pathwise_convergence.png",
     width = 900,
     height = 600)
@@ -313,6 +323,15 @@ ou_euler <- simulate_OU_euler(theta,
                                T,
                                n)
 
+# Quantifying Euler discretisation error
+max_error <- max(abs(ou_exact$X - ou_euler$X))
+mean_error <- mean(abs(ou_exact$X - ou_euler$X))
+cat(sprintf("\nOU Euler vs Exact (n=%d steps, T=%g):\n", n, T))
+cat(sprintf("  Max absolute error:  %.6f\n", max_error))
+cat(sprintf("  Mean absolute error: %.6f\n", mean_error))
+cat(sprintf("  (dt = %.4f, 1/theta = %.2f, dt << 1/theta: Euler valid)\n", 
+            T/n, 1/theta))
+
 # ------------------------------------------------
 # Plot trajectories
 # ------------------------------------------------
@@ -499,6 +518,12 @@ ou_long <- simulate_OU_exact(theta,
 
 time_average <- running_average(ou_long$X)
 
+# Report convergence
+final_avg <- tail(time_average, 1)
+cat(sprintf("\nErgodicity: running average at T=%g is %.4f (true mean mu=%.4f)\n",
+            T, final_avg, mu))
+cat(sprintf("Relative error: %.4f%%\n", 100*abs(final_avg - mu)/abs(mu)))
+
 # ------------------------------------------------
 # Plot trajectory
 # ------------------------------------------------
@@ -562,3 +587,5 @@ legend("topright",
        lwd = 2)
 
 dev.off()
+
+source("src/financial_application.R")
