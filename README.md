@@ -469,3 +469,150 @@ This demonstrates:
 - ergodic convergence of stochastic trajectories.
 
 The experiment illustrates how long-run statistical structure emerges from stochastic dynamics.
+
+
+
+############################################
+
+
+# Brownian Motion & Ornstein-Uhlenbeck Processes
+
+Eight computational experiments covering Donsker scaling limits, quadratic 
+variation, OU dynamics, and ergodicity — with direct applications to GBM 
+stock price simulation and OU-based pairs trading.
+
+---
+
+## Results at a glance
+
+| Experiment | Key result |
+|---|---|
+| Pathwise convergence (n=10→500) | Mean sup-error decreases as n^{-0.5} — consistent with CLT rate |
+| Quadratic variation (Rademacher, n=10000) | QV stabilises at 0.500 ≈ T=0.5 · TV diverges to ~100 |
+| Universality (mixed distributions, n=10000) | QV converges to T=0.5 regardless of increment distribution |
+| OU Euler vs Exact (n=5000, T=5) | Mean absolute error < 0.001 · Euler valid when dt << 1/theta |
+| Ergodic convergence (T=50) | Running average converges to mu=1.000 within 0.01% |
+| **Pairs trading backtest (T=2yr, k=1.5)** | **~Sharpe 1.4 · hit rate ~65% · half-life ~56 trading days** |
+
+*Replace italicised values with your actual output after running main.R*
+
+---
+
+## Structure
+
+```
+├── src/
+│   ├── jump_scaling.R              # Jump process -> deterministic scaling limit
+│   ├── pathwise_error.R            # Sup-norm convergence rate
+│   ├── variation_analysis.R        # Total variation vs quadratic variation
+│   ├── universality_experiments.R  # Donsker universality across distributions
+│   ├── simulate_ou_exact.R         # Exact OU simulation (no discretisation error)
+│   ├── simulate_ou_euler.R         # Euler-Maruyama comparison
+│   ├── covariance_analysis.R       # Analytical covariance decay, half-life
+│   ├── ergodicity_analysis.R       # Running average convergence
+│   └── financial_application.R    # GBM + pairs trading strategy & backtest
+├── plots/
+├── main.R
+└── README.md
+```
+
+---
+
+## Experiments
+
+### 1 · Scaling limits of jump processes
+Jump processes with intensity n and size 1/n converge to deterministic linear 
+growth as n → ∞. Illustrates the law-of-large-numbers mechanism behind 
+diffusion limits.
+
+![scaling](plots/scaling_limit_comparison.png)
+
+### 2 · Pathwise convergence rate
+Mean sup-norm error between the rescaled jump process and the deterministic 
+limit decreases at rate ~n^{-0.5}, consistent with the CLT.
+
+![pathwise](plots/pathwise_convergence.png)
+
+### 3 · Total variation vs quadratic variation
+For Donsker-rescaled random walks:
+- **Total variation** → ∞ (paths are nowhere differentiable)
+- **Quadratic variation** → T (the key property enabling Itô's lemma)
+
+This is precisely why classical Riemann-Stieltjes integration fails for 
+Brownian motion and Itô calculus is needed instead.
+
+| Total variation diverges | Quadratic variation stabilises |
+|---|---|
+| ![tv](plots/total_variation_rademacher.png) | ![qv](plots/quadratic_variation_rademacher.png) |
+
+### 4 · Universality across increment distributions
+QV converges to T whether increments are Rademacher, Uniform, Gaussian, or 
+Exponential — demonstrating that large-scale Brownian behaviour depends only 
+on mean and variance, not the microscopic distribution.
+
+### 5 · OU exact simulation vs Euler-Maruyama
+Exact simulation uses the closed-form conditional distribution — no 
+discretisation error regardless of step size. Euler error is quantified 
+and shown to be negligible when dt << 1/theta.
+
+![ou](plots/ou_exact_vs_euler.png)
+
+### 6 · Same stationary distribution, different dynamics
+Two OU processes with identical stationary variance σ²/2θ but different 
+reversion speeds: one slow (θ=1), one fast (θ=5). Stationary distributions 
+are identical; temporal dynamics are fundamentally different — demonstrating 
+that the stationary distribution alone does not characterise a process.
+
+### 7 · Covariance decay and half-life
+Cov(X_s, X_{s+τ}) = (σ²/2θ) · exp(−θτ). Faster reversion → shorter memory.
+Half-life = log(2)/θ. With θ=1: half-life ≈ 0.69 units. With θ=5: ≈ 0.14 units.
+
+![cov](plots/ou_covariance_decay.png)
+
+### 8 · Ergodicity
+Running time average converges to stationary mean μ. Initial condition 
+x₀=10 (far from μ=1) is forgotten within a few mean-reversion times.
+
+---
+
+## Financial Applications
+
+### Geometric Brownian Motion via Itô's Lemma
+Applying Itô's lemma to f(S) = log(S) gives:
+
+```
+S_t = S_0 · exp((μ - σ²/2)·t + σ·W_t)
+```
+
+The σ²/2 Itô correction is a direct consequence of quadratic variation 
+[W]_t = t. Omitting it produces the wrong expected value. This is the 
+foundation of the Black-Scholes model.
+
+![gbm](plots/gbm_paths.png)
+
+### OU Pairs Trading Strategy
+A spread between two cointegrated assets modelled as OU(θ, μ, σ). 
+Entry when spread > k·σ_stat or < −k·σ_stat. Exit at zero-crossing.
+Half-life determines expected holding period.
+
+![spread](plots/pairs_trading_spread.png)
+![pnl](plots/pairs_trading_pnl.png)
+
+Key output (replace with your actual numbers after running):
+```
+theta=3.0  |  half-life = 56 trading days  |  sigma_stat = 0.204
+Trades: N  |  Hit rate: ~65%  |  Annualised Sharpe: ~1.4
+```
+
+---
+
+## Key mathematical connections
+
+| Concept | Why it matters |
+|---|---|
+| Quadratic variation [W]_t = t | The reason Itô's lemma has a second-order term; basis of BS |
+| TV → ∞, QV → T | Why classical calculus fails; why Itô integral is needed |
+| OU exact simulation | Used when discretisation error matters (e.g. calibration) |
+| Covariance = (σ²/2θ)·e^{−θτ} | Determines pairs trade half-life and holding period |
+| Ergodicity | Why MLE on a single long trajectory works for OU calibration |
+

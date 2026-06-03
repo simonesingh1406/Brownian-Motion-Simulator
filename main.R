@@ -10,10 +10,8 @@ source("src/ergodicity_analysis.R")
 
 set.seed(123)
 
-# ------------------------------------------------
-# Experiment 1
-# Scaling limits of jump processes
-# ------------------------------------------------
+# Experiment 1 :Scaling limits of jump processes
+
 
 T <- 1
 n <- 50
@@ -27,10 +25,6 @@ traj_few <- simulate_jump(rate = 1,
 traj_many <- simulate_jump(rate = n,
                            jump_size = 1 / n,
                            T)
-
-# ------------------------------------------------
-# Plot comparison
-# ------------------------------------------------
 
 png("plots/scaling_limit_comparison.png",
     width = 900,
@@ -69,10 +63,7 @@ legend("topleft",
 dev.off()
 
 
-# ------------------------------------------------
-# Experiment 2
-# Pathwise convergence
-# ------------------------------------------------
+# Experiment 2 : Pathwise convergence
 
 simulate_X_hat_trajectory <- function(n, T) {
 
@@ -121,7 +112,7 @@ for (i in seq_along(n_values)) {
   mean_sup_error[i] <- mean(sup_errors)
 }
 
-# Printing convergence rate
+# convergence rate
 if (i > 1) {
   rate <- log(mean_sup_error[i-1] / mean_sup_error[i]) / 
           log(n_values[i] / n_values[i-1])
@@ -149,10 +140,7 @@ plot(n_values,
 
 dev.off()
 
-# ------------------------------------------------
-# Experiment 3
-# Total vs Quadratic Variation
-# ------------------------------------------------
+# Experiment 3 : Total vs Quadratic Variation
 
 set.seed(123)
 
@@ -166,9 +154,7 @@ n_values <- c(10,
               5000,
               10000)
 
-# ------------------------------------------------
 # Rademacher increments
-# ------------------------------------------------
 
 tv_rad <- numeric(length(n_values))
 qv_rad <- numeric(length(n_values))
@@ -188,9 +174,7 @@ for (i in seq_along(n_values)) {
   qv_rad[i] <- vars["quad_variation"]
 }
 
-# ------------------------------------------------
 # Plot total variation
-# ------------------------------------------------
 
 png("plots/total_variation_rademacher.png",
     width = 900,
@@ -207,9 +191,7 @@ plot(n_values,
 
 dev.off()
 
-# ------------------------------------------------
 # Plot quadratic variation
-# ------------------------------------------------
 
 png("plots/quadratic_variation_rademacher.png",
     width = 900,
@@ -231,10 +213,7 @@ abline(h = T,
 dev.off()
 
 
-# ------------------------------------------------
-# Experiment 4
-# Universality of Brownian scaling
-# ------------------------------------------------
+# Experiment 4 : Universality of Brownian scaling
 
 tv_mix <- numeric(length(n_values))
 qv_mix <- numeric(length(n_values))
@@ -252,9 +231,7 @@ for (i in seq_along(n_values)) {
   qv_mix[i] <- vars["quad_variation"]
 }
 
-# ------------------------------------------------
 # Total variation
-# ------------------------------------------------
 
 png("plots/universality_total_variation.png",
     width = 900,
@@ -271,9 +248,7 @@ plot(n_values,
 
 dev.off()
 
-# ------------------------------------------------
 # Quadratic variation
-# ------------------------------------------------
 
 png("plots/universality_quadratic_variation.png",
     width = 900,
@@ -294,10 +269,7 @@ abline(h = T,
 
 dev.off()
 
-# ------------------------------------------------
-# Experiment 5
-# OU process dynamics
-# ------------------------------------------------
+# Experiment 5 : OU process dynamics
 
 set.seed(123)
 
@@ -332,9 +304,7 @@ cat(sprintf("  Mean absolute error: %.6f\n", mean_error))
 cat(sprintf("  (dt = %.4f, 1/theta = %.2f, dt << 1/theta: Euler valid)\n", 
             T/n, 1/theta))
 
-# ------------------------------------------------
 # Plot trajectories
-# ------------------------------------------------
 
 png("plots/ou_exact_vs_euler.png",
     width = 900,
@@ -370,20 +340,14 @@ legend("topright",
 dev.off()
 
 
-# ------------------------------------------------
-# Experiment 6
-# Same stationary distribution
-# Different dynamics
-# ------------------------------------------------
+# Experiment 6 : Same stationary distribution, Different dynamics
 
 set.seed(123)
 
 T <- 5
 n <- 5000
 
-# ------------------------------------------------
 # Parameter sets
-# ------------------------------------------------
 
 theta_1 <- 1
 sigma_1 <- 1
@@ -408,9 +372,6 @@ ou_2 <- simulate_OU_exact(theta_2,
                           T,
                           n)
 
-# ------------------------------------------------
-# Plot trajectories
-# ------------------------------------------------
 
 png("plots/ou_same_stationary.png",
     width = 900,
@@ -443,10 +404,7 @@ legend("topright",
 
 dev.off()
 
-# ------------------------------------------------
-# Experiment 7
-# Covariance decay
-# ------------------------------------------------
+# Experiment 7 : Covariance decay
 
 tau_grid <- seq(0,
                 5,
@@ -489,10 +447,7 @@ legend("topright",
 
 dev.off()
 
-# ------------------------------------------------
-# Experiment 8
-# Ergodicity and stationary behaviour
-# ------------------------------------------------
+# Experiment 8 : Ergodicity and stationary behaviour
 
 set.seed(123)
 
@@ -512,9 +467,7 @@ ou_long <- simulate_OU_exact(theta,
                              T,
                              n)
 
-# ------------------------------------------------
 # Running time average
-# ------------------------------------------------
 
 time_average <- running_average(ou_long$X)
 
@@ -524,9 +477,6 @@ cat(sprintf("\nErgodicity: running average at T=%g is %.4f (true mean mu=%.4f)\n
             T, final_avg, mu))
 cat(sprintf("Relative error: %.4f%%\n", 100*abs(final_avg - mu)/abs(mu)))
 
-# ------------------------------------------------
-# Plot trajectory
-# ------------------------------------------------
 
 png("plots/ou_ergodic_trajectory.png",
     width = 900,
@@ -556,9 +506,7 @@ legend("topright",
 
 dev.off()
 
-# ------------------------------------------------
 # Running average convergence
-# ------------------------------------------------
 
 png("plots/ou_running_average.png",
     width = 900,
@@ -588,4 +536,4 @@ legend("topright",
 
 dev.off()
 
-source("src/financial_application.R")
+source("src/financial_applications.R")
