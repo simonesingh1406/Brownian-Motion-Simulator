@@ -91,90 +91,109 @@ dev.off()
 
 set.seed(42)
 
-# Simulate a spread as OU process
-theta_spread <- 3.0    # mean reversion speed
-mu_spread    <- 0.0    # long-run mean of spread
-sigma_spread <- 0.5    # spread volatility
-T_backtest   <- 2      # 2 years of daily data
-n_days       <- 504    # ~2 trading years
+theta_spread <- 3.0
+mu_spread    <- 0.0
+sigma_spread <- 0.5
+T_backtest   <- 2       # years
+n_days       <- 504     # ~2 trading years
 
-spread_sim <- simulate_OU_exact(theta_spread, mu_spread, sigma_spread,
-                                 x0 = 0, T = T_backtest, n = n_days)
-spread     <- spread_sim$X
-time_axis  <- spread_sim$time
+# --- Simulate spread directly (no external function dependency) ---------------
+dt_spread <- T_backtest / n_days
+spread    <- numeric(n_days + 1)
+spread[1] <- 0
 
-# Stationary std dev: sigma / sqrt(2*theta)
-sigma_stat  <- sigma_spread / sqrt(2 * theta_spread)
-half_life   <- log(2) / theta_spread
+for (i in 2:(n_days + 1)) {
+  cond_mean <- mu_spread + (spread[i-1] - mu_spread) * exp(-theta_spread * dt_spread)
+  cond_sd   <- sqrt(sigma_spread^2 / (2 * theta_spread) *
+                      (1 - exp(-2 * theta_spread * dt_spread)))
+  spread[i] <- rnorm(1, mean = cond_mean, sd = cond_sd)
+}
 
-cat("\n=== Application 2: OU Pairs Trading ===\n")
-cat(sprintf("OU params: theta=%.1f, mu=%.1f, sigma=%.1f\n", 
+time_axis    <- seq(0, T_backtest, length.out = n_days + 1)
+sigma_stat   <- sigma_spread / sqrt(2 * theta_spread)
+half_life    <- log(2) / theta_spread
+half_life_days <- half_life * (n_days / T_backtest)
+
+cat("=== Application 2: OU Pairs Trading ===\n")
+cat(sprintf("OU params: theta=%.1f, mu=%.1f, sigma=%.1f\n",
             theta_spread, mu_spread, sigma_spread))
 cat(sprintf("Stationary std dev: %.4f\n", sigma_stat))
-cat(sprintf("Half-life: %.2f time units (%.1f trading days)\n", 
-            half_life, half_life * 252 / T_backtest))
+cat(sprintf("Half-life: %.2f time units (%.1f trading days)\n\n",
+            half_life, half_life_days))
 
-# Trading signal: k = 1.5 standard deviations
-k <- 1.5
-entry_long  <- -k * sigma_stat
-entry_short <-  k * sigma_stat
+# --- Trading logic ------------------------------------------------------------
+k           <- 1.5
+entry_long  <- -k * sigma_stat   # enter long below this
+entry_short <-  k * sigma_stat   # enter short above this
 
-# Simulate P&L
-position  <- 0      # 1 = long, -1 = short, 0 = flat
-pnl       <- numeric(n_days)
-trades    <- 0
-wins      <- 0
+position <- 0
+pnl      <- numeric(n_days)   # length n_days, indexed 1..n_days
+trades   <- 0
+wins     <- 0
 
-for (i in 2:n_days) {
-  prev <- spread[i - 1]
-  curr <- spread[i]
-  
-  # Entry signals
+# spread[1] is t=0, spread[i+1] is end of day i
+for (i in 1:n_days) {
+  curr_spread <- spread[i]
+  next_spread <- spread[i + 1]
+
+  # Entry (only when flat)
   if (position == 0) {
-    if (prev > entry_short) { position <- -1; trades <- trades + 1 }
-    if (prev < entry_long)  { position <-  1; trades <- trades + 1 }
+    if (curr_spread > entry_short) {
+      position <- -1   # short the spread, expect it to fall
+      trades   <- trades + 1
+    } else if (curr_spread < entry_long) {
+      position <-  1   # long the spread, expect it to rise
+      trades   <- trades + 1
+    }
   }
-  
-  # Exit: spread crosses zero
-  if (position == 1  && curr >= 0) {
-    wins     <- wins + (curr > prev)
+
+  # P&L for this day
+  pnl[i] <- position * (next_spread - curr_spread)
+
+  # Exit when spread crosses zero
+  if (position ==  1 && next_spread >= 0) {
+    wins     <- wins + 1
     position <- 0
   }
-  if (position == -1 && curr <= 0) {
-    wins     <- wins + (curr < prev)
+  if (position == -1 && next_spread <= 0) {
+    wins     <- wins + 1
     position <- 0
   }
-  
-  # Daily P&L = position * change in spread
-  pnl[i] <- position * (curr - prev)
 }
 
 cum_pnl    <- cumsum(pnl)
-total_pnl  <- sum(pnl)
+sharpe     <- mean(pnl) / sd(pnl) * sqrt(252)
 hit_rate   <- ifelse(trades > 0, wins / trades, NA)
-sharpe     <- mean(pnl) / sd(pnl) * sqrt(252 / T_backtest)
 
-cat(sprintf("\nBacktest results (k=%.1f, T=%g years):\n", k, T_backtest))
-cat(sprintf("  Trades executed:  %d\n", trades))
-cat(sprintf("  Hit rate:         %.1f%%\n", 100 * hit_rate))
-cat(sprintf("  Total P&L:        %.4f\n", total_pnl))
-cat(sprintf("  Annualised Sharpe: %.2f\n", sharpe))
+cat(sprintf("Backtest results (k=%.1f, T=%g years):\n", k, T_backtest))
+cat(sprintf("  Trades executed:   %d\n", trades))
+cat(sprintf("  Hit rate:          %.1f%%\n", 100 * hit_rate))
+cat(sprintf("  Total P&L:         %.4f\n", sum(pnl)))
+cat(sprintf("  Annualised Sharpe: %.2f\n\n", sharpe))
 
-# Plot spread with signals
+# --- Spread plot --------------------------------------------------------------
 png("plots/pairs_trading_spread.png", width = 900, height = 500)
-plot(time_axis, spread, type = "l", col = "steelblue", lwd = 1.5,
-     xlab = "Time (years)", ylab = "Spread X_t",
+plot(time_axis, spread,
+     type = "l", col = "steelblue", lwd = 1.5,
+     xlab = "Time (years)", ylab = "Spread",
      main = sprintf("OU Pairs Trading — Spread & Entry Bands (k=%.1f)", k))
-abline(h = c(entry_long, entry_short), col = "red",    lty = 2, lwd = 1.5)
-abline(h = 0,                          col = "darkgray", lty = 3)
-legend("topright", 
-       legend = c("Spread", sprintf("Entry bands (±%.1f*sigma_stat)", k)),
-       col = c("steelblue", "red"), lty = c(1, 2), lwd = 2)
+abline(h =  entry_short, col = "red",      lty = 2, lwd = 1.5)
+abline(h =  entry_long,  col = "red",      lty = 2, lwd = 1.5)
+abline(h =  0,           col = "darkgray", lty = 3)
+legend("topright",
+       legend = c("Spread", sprintf("Entry bands (+/-%.2f)", entry_short)),
+       col    = c("steelblue", "red"),
+       lty    = c(1, 2), lwd = 2)
 dev.off()
 
-# Plot cumulative P&L
+# --- P&L plot ----------------------------------------------------------------
+# time_axis has n_days+1 points; pnl/cum_pnl have n_days points
+# drop the first time point (t=0) so lengths match
+pnl_time <- time_axis[-1]
+
 png("plots/pairs_trading_pnl.png", width = 900, height = 400)
-plot(time_axis, cum_pnl, type = "l", col = "darkgreen", lwd = 2,
+plot(pnl_time, cum_pnl,
+     type = "l", col = "darkgreen", lwd = 2,
      xlab = "Time (years)", ylab = "Cumulative P&L",
      main = sprintf("Pairs Trading P&L — Sharpe %.2f | Hit Rate %.0f%%",
                     sharpe, 100 * hit_rate))

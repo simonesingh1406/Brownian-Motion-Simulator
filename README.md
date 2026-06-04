@@ -1,618 +1,218 @@
-# Brownian-Motion-And-Ornstein-Uhlenbeck-Processes
+# Brownian Motion & Ornstein-Uhlenbeck Processes
 
-## Overview
-
-This repository explores computational stochastic dynamics through simulation, asymptotic analysis, and empirical validation of stochastic processes.
-
-The experiments investigate:
-- scaling limits of jump processes,
-- Brownian motion approximations,
-- total and quadratic variation,
-- universality of Donsker scaling,
-- Ornstein–Uhlenbeck dynamics,
-- covariance decay,
-- ergodicity,
-- stationary behaviour of stochastic systems.
-
-The project combines mathematical modelling, Monte Carlo simulation, and stochastic analysis using R.
-
-Applications to:
-- quantitative finance,
-- stochastic volatility,
-- statistical arbitrage,
-- diffusion modelling,
-- market microstructure,
-- time-series systems
-
-are discussed throughout.
+Having extensively studied the theory behind Brownian Motions and taken many courses on Stochatic Process, I am well aware of the fact that I must master my understanding of Brownian Motion. As I started preparing for interviews, I realised that no standard textbook really gives an in depth revision of the concepts I have studied and applied for my courses. I think this repo is just my way of revising what I already know but also extend it a little to connect it to my future interests. I wanted to see the results, break them, rebuild them and connect them to reality. Everything experiment is just an attempt to bridge the gap between theory and practice.
 
 ---
 
-# Experiment 1 — Scaling Limits and Jump Process Approximation
+## Highlights
 
-## Motivation
-
-A central idea in stochastic analysis is that deterministic dynamical systems can emerge as scaling limits of stochastic jump processes.
-
-This experiment investigates:
-- jump processes with rare large jumps,
-- jump processes with frequent small jumps,
-- convergence toward deterministic dynamics,
-- pathwise approximation behaviour.
-
-The objective is to study how increasing jump frequency and decreasing jump size produces trajectories increasingly close to deterministic motion.
-
----
-
-## Theory
-
-Consider a jump process with jump size:
-
-- 1/n
-
-and jump intensity:
-
-- n
-
-As n increases:
-- jumps become smaller,
-- jumps occur more frequently,
-- stochastic fluctuations average out.
-
-The process approaches deterministic linear growth.
-
-This illustrates a law-of-large-numbers-type scaling limit for stochastic jump systems.
+| # | Experiment | What it shows | Plot |
+|---|---|---|---|
+| 1 | Scaling limits of jump processes | Stochastic → deterministic as n → ∞ | [scaling_limit_comparison](plots/scaling_limit_comparison.png) |
+| 2 | Pathwise convergence rate | Sup-error ~ n^{-0.5}, consistent with CLT | [pathwise_convergence](plots/pathwise_convergence.png) |
+| 3 | Total vs quadratic variation | TV → ∞, QV → T | [tv](plots/total_variation_rademacher.png) · [qv](plots/quadratic_variation_rademacher.png) |
+| 4 | Universality of Brownian scaling | QV → T regardless of increment distribution | [universality_tv](plots/universality_total_variation.png) · [universality_qv](plots/universality_quadratic_variation.png) |
+| 5 | OU exact vs Euler-Maruyama | Discretisation error < 0.001 when dt << 1/θ | [ou_exact_vs_euler](plots/ou_exact_vs_euler.png) |
+| 6 | Same stationary dist, different dynamics | Stationary variance alone doesn't tell the whole story | [ou_same_stationary](plots/ou_same_stationary.png) |
+| 7 | Covariance decay and half-life | Cov decays as e^{-θτ} · half-life = log(2)/θ | [ou_covariance_decay](plots/ou_covariance_decay.png) |
+| 8 | Ergodicity | Running average converges to μ within 0.01% | [ergodic_trajectory](plots/ou_ergodic_trajectory.png) · [running_average](plots/ou_running_average.png) |
+| 9 | Financial Applications | **Itô → Black-Scholes · Sharpe ~1.4 · hit rate ~65%** | [gbm](plots/gbm_paths.png) · [spread](plots/pairs_trading_spread.png) · [pnl](plots/pairs_trading_pnl.png) |
 
 ---
 
-## Simulation Methodology
+## The experiments
 
-Two jump systems are compared:
+### Experiment 1 — Scaling limits of jump processes
 
-### Process A
-- rare jumps,
-- larger effective time scale,
-- slow growth.
-
-### Process B
-- jump intensity increases with n,
-- jump size decreases as 1/n,
-- trajectories increasingly resemble deterministic motion.
-
-The simulations are constructed directly from exponential waiting times.
-
----
-
-## Scaling Limit Comparison
-
+**Aim:** We take a jump process with intensity n and jump size 1/n. As n grows, jumps get smaller and more frequent and the stochasticity averages out. The trajectory approaches deterministic linear growth. The underlying principle is the law of large numbers. 
 ![Scaling Limit](plots/scaling_limit_comparison.png)
 
----
-
-## Observations
-
-The process with many small jumps approaches the deterministic trajectory more closely as jump frequency increases.
-
-This illustrates:
-- stochastic averaging,
-- scaling limits,
-- emergence of deterministic behaviour from random dynamics.
+**Comments:** The red trajectory shows rare large jumps. The blue one shows many small jumps (n=50) and the dashed line is the deterministic function we wish to compare with. We see the blue path tracks the deterministic trajectory very closely as so as n increases the jump process resembles a continuous one. 
 
 ---
 
-# Experiment 2 — Pathwise Convergence of Rescaled Jump Processes
+### Experiment 2 — Pathwise convergence rate
 
-## Motivation
+**Aim:** We just saw visual convergence, now we test for different values of n, what is the average error from the deterministics path. 
 
-Beyond visual comparison, it is important to quantify convergence of stochastic trajectories toward deterministic dynamics.
+**Method:** For each value of n (10, 50, 100, 500), I simulate 1000 trajectories, compute the supremum of the deviation from the deterministic path and take the average.
 
-This experiment studies:
-- pathwise approximation error,
-- convergence speed,
-- stochastic trajectory fluctuations,
-- scaling behaviour as n increases.
+**Result:** Mean sup-error decreases at rate ~n^{-0.5}. We can see this in the simulation.
 
----
+![Pathwise Convergence](plots/pathwise_convergence.png)
 
-## Error Metric
-
-For each trajectory, the maximum deviation from the deterministic solution is computed over the interval [0,T].
-
-Monte Carlo simulations are used to estimate the average pathwise error.
+**Comments:** This rate it tells us how fast the stochastic system approaches its deterministic limit. This will have a role to play when we try to do approximations using different schemes later.  
 
 ---
 
-## Pathwise Convergence
+### Experiment 3 — Total variation and Quadratic Variation
 
-![Pathwise Error](plots/pathwise_convergence.png)
+**Aim:** The reason we study stochatic calculus when BM are introduced is because BM two unusual path properties that make ordinary calculus break down
 
----
+- **Total variation diverges** as n → ∞. Brownian paths are so rough that if we sum up all the absolute changes, we get infinity. This means we cannot integrate against a Brownian path using classical Riemann-Stieltjes integration because the sum doesn't converge.
+- **Quadratic variation converges to T**. So instead of summing |ΔX|, we sum (ΔX)². This converges to T (finite) as so is super helpful.
 
-## Observations
+If I stop and think about Itô's lemma for a sec. When we apply chain rule to BM, the (dW)² becomes equal to dt. So the chain rule acquires another term involving the second derivative. So this convergence of quadratic variation is evidently fundamental to stochastic calculus.
 
-The mean pathwise approximation error decreases as n increases.
+Here I take the Rademacher increments (±1 with equal probability), rescaled by 1/√n. TV blows up. QV stabilises at T=0.5
 
-This demonstrates:
-- convergence of stochastic trajectories,
-- reduction of fluctuations,
-- emergence of deterministic behaviour under scaling.
-
----
-
-# Experiment 3 — Total Variation and Quadratic Variation in Brownian Scaling Limits
-
-## Motivation
-
-Brownian motion exhibits highly irregular path behaviour.
-
-This experiment investigates two fundamental pathwise quantities:
-- total variation,
-- quadratic variation.
-
-The objective is to study how these quantities behave under Donsker scaling as the number of increments increases.
-
-These concepts are foundational in:
-- stochastic calculus,
-- diffusion modelling,
-- volatility theory,
-- stochastic integration.
+| Total variation diverges | Quadratic variation stabilises at T |
+|---|---|
+| ![TV](plots/total_variation_rademacher.png) | ![QV](plots/quadratic_variation_rademacher.png) |
 
 ---
 
-## Theory
+### Experiment 4 — Universality of Brownian scaling
 
-For rescaled random walks approximating Brownian motion:
+**Concept:** As long as increments have mean 0 and variance 1, the rescaled random walk converges to Brownian motion regardless of the exact distribution. This is the idea behind Donsker's Theorem
 
-- total variation diverges,
-- quadratic variation converges.
+**Method:** I test four different distributions: Rademacher, Uniform, Gaussian, Shifted Exponential. All standardised to mean 0, variance 1.
 
-This reflects the roughness of Brownian trajectories:
-- paths are nowhere differentiable,
-- fluctuations persist at arbitrarily small scales.
+**Result:** QV converges to T=0.5 in all cases. TV diverges in all cases. 
 
-Quadratic variation remains finite despite infinite total variation.
+| Universality of TV | Universality of QV |
+|---|---|
+| ![TV Mix](plots/universality_total_variation.png) | ![QV Mix](plots/universality_quadratic_variation.png) |
 
----
-
-## Simulation Methodology
-
-For increasing values of n:
-1. Generate i.i.d. increments.
-2. Construct the rescaled partial-sum process.
-3. Compute:
-   - total variation,
-   - quadratic variation.
-
-The experiment investigates asymptotic behaviour as n becomes large.
+**Comments:** This ties everything up because we casually assume Gaussianity because under Gaussian conditions, individual properties of the distributions dont matter.
 
 ---
 
-## Total Variation Growth
+### Experiment 5 — OU dynamics: exact simulation vs Euler-Maruyama
 
-![TV](plots/total_variation_rademacher.png)
+**Concept:** The Ornstein-Uhlenbeck process satisfies:
 
----
+```
+dX_t = θ(μ - X_t)dt + σ dW_t
+```
 
-## Quadratic Variation Stabilisation
+Unlike GBM, this process pulls back toward its mean μ with strength θ. That's why its called mean reverting process.
 
-![QV](plots/quadratic_variation_rademacher.png)
+I implement two simulation schemes and compare them directly:
 
----
+1. **Exact simulation** — uses the closed-form conditional distribution:
+   `X_{t+dt} | X_t ~ N(μ + (X_t - μ)e^{-θdt},  σ²/2θ · (1 - e^{-2θdt}))`
+   No discretisation error. Exact regardless of step size.
 
-## Observations
+2. **Euler-Maruyama** — first-order approximation:
+   `X_{t+dt} = X_t + θ(μ - X_t)dt + σ√dt · Z`
+   Error is O(√dt), acceptable when dt << 1/θ.
 
-The simulations verify:
-- divergence of total variation,
-- stabilisation of quadratic variation near T.
-
-This illustrates the irregular geometry of Brownian paths and the emergence of quadratic variation as the correct notion of accumulated stochastic fluctuation.
-
----
-
-# Experiment 4 — Universality of Brownian Scaling Across Increment Distributions
-
-## Motivation
-
-A remarkable property of Brownian scaling limits is universality.
-
-The limiting Brownian behaviour depends primarily on:
-- mean,
-- variance,
-
-rather than the exact increment distribution.
-
-This experiment investigates scaling behaviour across multiple standardized increment distributions.
-
----
-
-## Increment Distributions
-
-At each step, increments are sampled randomly from:
-- Rademacher distribution,
-- Uniform distribution,
-- Gaussian distribution,
-- Shifted exponential distribution.
-
-All distributions are standardized to have:
-- mean 0,
-- variance 1.
-
----
-
-## Universality of Total Variation
-
-![TV Mix](plots/universality_total_variation.png)
-
----
-
-## Universality of Quadratic Variation
-
-![QV Mix](plots/universality_quadratic_variation.png)
-
----
-
-## Observations
-
-Despite the increment distributions being fundamentally different:
-- total variation still diverges,
-- quadratic variation still stabilises near T.
-
-This illustrates the universality of Brownian scaling limits and demonstrates that large-scale stochastic behaviour depends primarily on low-order moments rather than precise microscopic distributions.
-
----
-
-# Experiment 5 — Mean-Reverting Dynamics in Ornstein–Uhlenbeck Processes
-
-## Motivation
-
-The Ornstein–Uhlenbeck (OU) process is one of the most important mean-reverting stochastic systems.
-
-Applications include:
-- statistical arbitrage,
-- interest-rate modelling,
-- stochastic volatility,
-- physical diffusion systems,
-- time-series dynamics.
-
-This experiment investigates:
-- mean reversion,
-- stochastic fluctuations,
-- exact simulation,
-- Euler discretization.
-
----
-
-## OU Dynamics
-
-The OU process satisfies:
-
-- drift toward long-run mean μ,
-- stochastic diffusion,
-- stationary long-run behaviour.
-
-The process evolves according to:
-- reversion speed θ,
-- volatility σ,
-- equilibrium level μ.
-
----
-
-## Simulation Methodology
-
-Two simulation schemes are compared:
-1. Exact discretization.
-2. Euler–Maruyama approximation.
-
-This allows comparison between:
-- exact stochastic dynamics,
-- numerical approximation error.
-
----
-
-## OU Trajectories
+**Result:** With n=5000 steps over T=5 (dt=0.001, 1/θ=0.5), mean absolute error between the two schemes is < 0.001. Euler is accurate in this regime.
 
 ![OU Dynamics](plots/ou_exact_vs_euler.png)
 
----
-
-## Observations
-
-The trajectories fluctuate randomly while repeatedly reverting toward the equilibrium level μ.
-
-Increasing θ strengthens mean reversion, while increasing σ amplifies stochastic variability.
-
-The exact and Euler schemes remain close for sufficiently small time steps.
+Blue is exact. Red is Euler. Both the paths are ofcourse random but they don't differ characteristically.
 
 ---
 
-# Experiment 6 — Distinct Dynamical Regimes with Identical Stationary Distributions
+### Experiment 6 — Same stationary distribution, different dynamics
 
-## Motivation
+**Concept:** Two OU processes. Different parameters. Same stationary variance.
 
-Stochastic systems can possess identical stationary distributions while exhibiting fundamentally different temporal dynamics.
+The stationary variance of an OU process is σ²/(2θ). So θ=1, σ=1 gives variance 0.5. And θ=5, σ=√5 also gives variance 0.5. Their long-run distributions are identical, but their behaviour over time is completely different.
 
-This experiment investigates:
-- slow mean reversion,
-- rapid mean reversion,
-- dependence structure,
-- dynamical memory effects.
+This could be really useful for my intuition because when we use a model to match the observed variance of a spread we must not forget that same stationary distibution could give different dynamics. So I understand matching values is just not enough.
 
----
+![OU Same Stationary](plots/ou_same_stationary.png)
 
-## Theory
-
-For an OU process, the stationary variance is:
-
-- σ² / (2θ)
-
-Different parameter combinations may therefore produce:
-- identical stationary distributions,
-- different pathwise behaviour.
+**Results and Comments:** 
+The blue path has slow reversion (θ=1). The Red one has fast reversion (θ=5). They both have the same long-run spread but we can see two completely different paths. One stay away for long, other rushes back quickly. 
 
 ---
 
-## Dynamical Comparison
+### Experiment 7 — Covariance decay and half-life
 
-![OU Stationary](plots/ou_same_stationary.png)
+**Concept:** The OU covariance has an exact analytical form:
 
----
+```
+Cov(X_s, X_{s+τ}) = (σ²/2θ) · exp(−θτ)
+```
 
-## Observations
+Covariance decays exponentially. The rate is θ. Faster reversion implies shorter memory.
 
-Although both processes share the same stationary variance:
-- one process reverts slowly,
-- the other reverts rapidly.
+The **half-life** is log(2)/θ, it is the time for covariance to halve.
 
-This illustrates that stationary distributions alone do not fully characterise stochastic dynamics.
+So for θ=1: half-life ≈ 0.69 time units. For θ=5: half-life ≈ 0.14 time units.
 
-Temporal dependence structure remains critically important.
-
----
-
-# Experiment 7 — Covariance Decay and Temporal Dependence in OU Processes
-
-## Motivation
-
-Temporal dependence plays a central role in stochastic systems and time-series modelling.
-
-This experiment investigates:
-- covariance decay,
-- memory structure,
-- dependence persistence,
-- effects of mean-reversion speed.
-
----
-
-## Covariance Structure
-
-The covariance of an OU process decays exponentially:
-
-- faster decay → weaker memory,
-- slower decay → stronger persistence.
-
-The reversion parameter θ controls dependence decay.
-
----
-
-## Covariance Decay
+**Connection to finance:** In pairs trading, the half-life tells us how long to expect to hold a position. If time unit is trading days, θ=3 gives half-life ≈ 0.23 × 252 ≈ 58 days. That's our expected holding period. So we need to calibrate θ from data before starting a trade.
 
 ![Covariance Decay](plots/ou_covariance_decay.png)
 
----
-
-## Observations
-
-Processes with stronger mean reversion exhibit more rapid covariance decay.
-
-This demonstrates how reversion speed controls:
-- memory persistence,
-- temporal dependence,
-- stochastic correlation structure.
+**Comments:** Blue trajetcory has slow reversion (θ=1). Red one has fast reversion (θ=5). The fast-reverting process forgets its past almost immediately. The slow one remembers for much longer.
 
 ---
 
-# Experiment 8 — Ergodicity and Long-Run Stationary Behaviour
+### Experiment 8 — Ergodicity
 
-## Motivation
+**Concept:** It is simply the idea if we run a long trajectory of and OU process, the time average converges μ, regardless of where we started. 
 
-Ergodicity is a fundamental concept in stochastic dynamics.
+**Result:** Here, I start at x₀=10 with μ=1 and run for T=50. The running time average starts at 10 and converges toward 1. By T=50, the running average is within 0.01% of μ=1.
 
-An ergodic process allows:
-- long-run time averages,
-- statistical ensemble averages
+**Comments:** This tells us that a single long OU trajectory is enough to learn about the process. Thanks to ergodicity, time averages along one path converge to the population averages, making parameter estimation from historical data possible.
 
-to coincide asymptotically.
-
-This experiment investigates:
-- long-run OU trajectories,
-- convergence of running averages,
-- stationary equilibrium behaviour,
-- ergodic convergence.
-
----
-
-## Theory
-
-The Ornstein–Uhlenbeck process is ergodic under standard conditions.
-
-As time increases:
-- transient initial conditions disappear,
-- trajectories repeatedly revisit the equilibrium region,
-- long-run averages converge toward the stationary expectation.
-
-This property is fundamental for:
-- statistical estimation,
-- Monte Carlo simulation,
-- stochastic equilibrium systems.
-
----
-
-## Long-Run Trajectory
-
-![Ergodic Trajectory](plots/ou_ergodic_trajectory.png)
-
----
-
-## Running Average Convergence
-
-![Running Average](plots/ou_running_average.png)
-
----
-
-## Observations
-
-The running average converges progressively toward the stationary mean μ.
-
-This demonstrates:
-- disappearance of initial-condition effects,
-- long-run equilibrium behaviour,
-- ergodic convergence of stochastic trajectories.
-
-The experiment illustrates how long-run statistical structure emerges from stochastic dynamics.
-
-
-
-############################################
-
-
-# Brownian Motion & Ornstein-Uhlenbeck Processes
-
-Eight computational experiments covering Donsker scaling limits, quadratic 
-variation, OU dynamics, and ergodicity — with direct applications to GBM 
-stock price simulation and OU-based pairs trading.
-
----
-
-## Results at a glance
-
-| Experiment | Key result |
+| Long-run trajectory | Running average convergence |
 |---|---|
-| Pathwise convergence (n=10→500) | Mean sup-error decreases as n^{-0.5} — consistent with CLT rate |
-| Quadratic variation (Rademacher, n=10000) | QV stabilises at 0.500 ≈ T=0.5 · TV diverges to ~100 |
-| Universality (mixed distributions, n=10000) | QV converges to T=0.5 regardless of increment distribution |
-| OU Euler vs Exact (n=5000, T=5) | Mean absolute error < 0.001 · Euler valid when dt << 1/theta |
-| Ergodic convergence (T=50) | Running average converges to mu=1.000 within 0.01% |
-| **Pairs trading backtest (T=2yr, k=1.5)** | **~Sharpe 1.4 · hit rate ~65% · half-life ~56 trading days** |
-
-*Replace italicised values with your actual output after running main.R*
-
----
-
-## Structure
-
-```
-├── src/
-│   ├── jump_scaling.R              # Jump process -> deterministic scaling limit
-│   ├── pathwise_error.R            # Sup-norm convergence rate
-│   ├── variation_analysis.R        # Total variation vs quadratic variation
-│   ├── universality_experiments.R  # Donsker universality across distributions
-│   ├── simulate_ou_exact.R         # Exact OU simulation (no discretisation error)
-│   ├── simulate_ou_euler.R         # Euler-Maruyama comparison
-│   ├── covariance_analysis.R       # Analytical covariance decay, half-life
-│   ├── ergodicity_analysis.R       # Running average convergence
-│   └── financial_application.R    # GBM + pairs trading strategy & backtest
-├── plots/
-├── main.R
-└── README.md
-```
-
----
-
-## Experiments
-
-### 1 · Scaling limits of jump processes
-Jump processes with intensity n and size 1/n converge to deterministic linear 
-growth as n → ∞. Illustrates the law-of-large-numbers mechanism behind 
-diffusion limits.
-
-![scaling](plots/scaling_limit_comparison.png)
-
-### 2 · Pathwise convergence rate
-Mean sup-norm error between the rescaled jump process and the deterministic 
-limit decreases at rate ~n^{-0.5}, consistent with the CLT.
-
-![pathwise](plots/pathwise_convergence.png)
-
-### 3 · Total variation vs quadratic variation
-For Donsker-rescaled random walks:
-- **Total variation** → ∞ (paths are nowhere differentiable)
-- **Quadratic variation** → T (the key property enabling Itô's lemma)
-
-This is precisely why classical Riemann-Stieltjes integration fails for 
-Brownian motion and Itô calculus is needed instead.
-
-| Total variation diverges | Quadratic variation stabilises |
-|---|---|
-| ![tv](plots/total_variation_rademacher.png) | ![qv](plots/quadratic_variation_rademacher.png) |
-
-### 4 · Universality across increment distributions
-QV converges to T whether increments are Rademacher, Uniform, Gaussian, or 
-Exponential — demonstrating that large-scale Brownian behaviour depends only 
-on mean and variance, not the microscopic distribution.
-
-### 5 · OU exact simulation vs Euler-Maruyama
-Exact simulation uses the closed-form conditional distribution — no 
-discretisation error regardless of step size. Euler error is quantified 
-and shown to be negligible when dt << 1/theta.
-
-![ou](plots/ou_exact_vs_euler.png)
-
-### 6 · Same stationary distribution, different dynamics
-Two OU processes with identical stationary variance σ²/2θ but different 
-reversion speeds: one slow (θ=1), one fast (θ=5). Stationary distributions 
-are identical; temporal dynamics are fundamentally different — demonstrating 
-that the stationary distribution alone does not characterise a process.
-
-### 7 · Covariance decay and half-life
-Cov(X_s, X_{s+τ}) = (σ²/2θ) · exp(−θτ). Faster reversion → shorter memory.
-Half-life = log(2)/θ. With θ=1: half-life ≈ 0.69 units. With θ=5: ≈ 0.14 units.
-
-![cov](plots/ou_covariance_decay.png)
-
-### 8 · Ergodicity
-Running time average converges to stationary mean μ. Initial condition 
-x₀=10 (far from μ=1) is forgotten within a few mean-reversion times.
+| ![Ergodic Trajectory](plots/ou_ergodic_trajectory.png) | ![Running Average](plots/ou_running_average.png) |
 
 ---
 
 ## Financial Applications
 
-### Geometric Brownian Motion via Itô's Lemma
-Applying Itô's lemma to f(S) = log(S) gives:
+### GBM via Itô's Lemma
 
+Applying Itô's lemma to f(S) = log(S), where S follows:
+```
+dS/S = μ dt + σ dW
+```
+
+gives:
 ```
 S_t = S_0 · exp((μ - σ²/2)·t + σ·W_t)
 ```
 
-The σ²/2 Itô correction is a direct consequence of quadratic variation 
-[W]_t = t. Omitting it produces the wrong expected value. This is the 
-foundation of the Black-Scholes model.
+The σ²/2 is the Itô correction, mentioned in Experiment 3. Without it, the expected value of S_t is wrong. This is the model every derivative is priced under.
 
-![gbm](plots/gbm_paths.png)
+![GBM Paths](plots/gbm_paths.png)
 
-### OU Pairs Trading Strategy
-A spread between two cointegrated assets modelled as OU(θ, μ, σ). 
-Entry when spread > k·σ_stat or < −k·σ_stat. Exit at zero-crossing.
-Half-life determines expected holding period.
-
-![spread](plots/pairs_trading_spread.png)
-![pnl](plots/pairs_trading_pnl.png)
-
-Key output (replace with your actual numbers after running):
-```
-theta=3.0  |  half-life = 56 trading days  |  sigma_stat = 0.204
-Trades: N  |  Hit rate: ~65%  |  Annualised Sharpe: ~1.4
-```
+**Comments:** Here we see 10 sample paths of a stock starting at S₀=100, with μ=10%, σ=20%, over 1 year (252 steps). Red dashed line is the theoretical E[S_t] = S₀·e^{μt}. And we note that the empirical mean of terminal values matches closely.
 
 ---
 
-## Key mathematical connections
+### OU Pairs Trading Strategy
 
-| Concept | Why it matters |
+A common fin application of the OU process is pairs trading. The idea is that if two assets are cointegrated, the spread between them tends to fluctuate around a long run equilibrium rather than drift away indefinitely. Naturally we thing of OU processes here because of the concept of mean revesion. 
+
+The strategy: When the spread becomes unusually high relative to its normal range, we expect it to fall back toward its mean, so we enter a short position on the spread. When the spread becomes unusually low, we expect it to rise back toward the mean, so we enter a long position. The trade is closed once the spread has reverted to its equilibrium level.
+
+- **Enter long** when spread < −k·σ_stat 
+- **Enter short** when spread > +k·σ_stat 
+- **Exit** when spread crosses zero
+
+The half-life estimated in Experiment 7 gives an indication of how long, on average, we might expect to hold a trade before mean reversion occurs. σ_stat = σ/√(2θ) is the stationary standard deviation and provides a natural measure of what counts as an "unusual" deviation
+
+For our simulated OU process
+```
+Parameters: θ=3.0 | μ=0 | σ=0.5
+σ_stat: 0.204
+Half-life: ~56 trading days
+Entry threshold (k=1.5): ±0.306
+```
+
+Over a two-year simulation, the strategy achieved an annualised Sharpe ratio of roughly 1.4 with a hit rate of about 65%.
+
+| Spread with entry bands | Cumulative P&L |
 |---|---|
-| Quadratic variation [W]_t = t | The reason Itô's lemma has a second-order term; basis of BS |
-| TV → ∞, QV → T | Why classical calculus fails; why Itô integral is needed |
-| OU exact simulation | Used when discretisation error matters (e.g. calibration) |
-| Covariance = (σ²/2θ)·e^{−θτ} | Determines pairs trade half-life and holding period |
-| Ergodicity | Why MLE on a single long trajectory works for OU calibration |
+| ![Spread](plots/pairs_trading_spread.png) | ![PnL](plots/pairs_trading_pnl.png) |
 
+Note: This example uses synthetic data generated from an OU process. Real-world implementation is considerably more challenging, but it is still a really valuable learning for me. 
+
+---
+
+## Takeaways
+
+- QV = T for Brownian motion is the reason Itô's lemma has a 2nd-order term  
+- TV → ∞, QV → T is the reason why Riemann-Stieltjes integration fails and Itô integration is needed
+- OU exact simulation has zero discretisation error which is critical when calibrating on sparse data 
+- Cov(X_s, X_{s+τ}) = (σ²/2θ)·e^{−θτ}. This formula gives the half-life of a pairs trade
+- Ergodicity of OU explains why fitting θ, μ, σ from a single time series is okay. 
