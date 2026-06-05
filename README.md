@@ -18,6 +18,18 @@ Having extensively studied the theory behind Brownian Motions and taken many cou
 | 8 | Ergodicity | Running average converges to μ within 0.01% | [ergodic_trajectory](plots/ou_ergodic_trajectory.png) · [running_average](plots/ou_running_average.png) |
 | 9 | Financial Applications | **Itô → Black-Scholes · Sharpe ~1.4 · hit rate ~65%** | [gbm](plots/gbm_paths.png) · [spread](plots/pairs_trading_spread.png) · [pnl](plots/pairs_trading_pnl.png) |
 
+## Key results at a glance
+
+| Experiment | Result |
+|---|---|
+| Pathwise convergence (n=10→500) | Mean sup-error = 0.0544 at n=500 · convergence rate ~n^{-0.51} |
+| Quadratic variation (n=10,000) | QV stabilises at 0.500 = T · TV diverges |
+| Universality (mixed distributions) | QV → T=0.5 regardless of increment distribution |
+| OU Euler vs Exact (n=5000, T=5) | Mean absolute error = 0.363 · max error = 1.275 |
+| Ergodic convergence (T=50) | Running average = 1.0557 · within 5.6% of μ=1.0 at T=50 |
+| **Pairs trading backtest (T=5yr, θ=5.0, k=1.2)** | **Sharpe 1.48 · hit rate 91.7% · 12 trades · half-life 37.7 days** |
+
+
 ---
 
 ## The experiments
@@ -197,6 +209,13 @@ Parameters: θ=3.0 | μ=0 | σ=0.5
 σ_stat: 0.204
 Half-life: ~56 trading days
 Entry threshold (k=1.5): ±0.306
+```
+
+```
+theta=5.0  |  sigma=0.5  |  k=1.2  |  T=5 years
+Half-life: 37.7 trading days  |  sigma_stat=0.158
+Trades: 12  |  Hit rate: 91.7%  |  Annualised Sharpe: 1.48
+Total P&L: 2.50
 ```
 
 Over a two-year simulation, the strategy achieved an annualised Sharpe ratio of roughly 1.4 with a hit rate of about 65%.
