@@ -42,7 +42,7 @@ simulate_GBM <- function(S0, mu, sigma, T, n, n_paths = 1) {
   list(t = t, paths = paths)
 }
 
-set.seed(42)
+set.seed(123)
 S0    <- 100
 mu    <- 0.10    # 10% annual drift
 sigma <- 0.20    # 20% annual vol
@@ -89,13 +89,13 @@ dev.off()
 # Key parameter: half-life = log(2)/theta
 #   This tells you how long to expect to hold the position.
 
-set.seed(42)
+set.seed(123)
 
-theta_spread <- 3.0
+theta_spread <- 5.0
 mu_spread    <- 0.0
 sigma_spread <- 0.5
-T_backtest   <- 2       # years
-n_days       <- 504     # ~2 trading years
+T_backtest   <- 5       # years
+n_days       <- 1360     # 5 trading years
 
 # --- Simulate spread directly (no external function dependency) ---------------
 dt_spread <- T_backtest / n_days
@@ -122,7 +122,7 @@ cat(sprintf("Half-life: %.2f time units (%.1f trading days)\n\n",
             half_life, half_life_days))
 
 # --- Trading logic ------------------------------------------------------------
-k           <- 1.5
+k           <- 1.2
 entry_long  <- -k * sigma_stat   # enter long below this
 entry_short <-  k * sigma_stat   # enter short above this
 

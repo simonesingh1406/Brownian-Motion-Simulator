@@ -537,3 +537,6 @@ legend("topright",
 dev.off()
 
 source("src/financial_applications.R")
+
+cat(sprintf("Spread range: [%.4f, %.4f]\n", min(spread), max(spread)))
+cat(sprintf("Threshold: long=%.4f, short=%.4f\n", entry_long, entry_short))
