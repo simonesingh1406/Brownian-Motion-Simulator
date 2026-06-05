@@ -1,6 +1,6 @@
 # Brownian Motion & Ornstein-Uhlenbeck Processes
 
-Having extensively studied the theory behind Brownian Motions and taken many courses on Stochastic Process, I am well aware of the fact that I must master my understanding of Brownian Motion. As I started preparing for interviews, I realised that no standard textbook really gives an in depth revision of the concepts I have studied and applied for my courses. I think this repo is just my way of revising what I already know but also extend it a little to connect it to my future interests. I wanted to take the theory from lectures, actually see it by simulating it, break it (trust me, many times) and connect it to something real. I wanted to see the results, break them, rebuild them and connect them to reality. Every experiment is just a step towards bridging the gap between theory and practice. That is why I ended with a pairs trading stategy that I only got the opportunity to learn nicely about during this repo.
+Having extensively studied the theory behind Brownian Motions and taken many courses on Stochastic Process, I am well aware of the fact that I must master my understanding of Brownian Motion. As I started preparing for interviews, I realised that no standard textbook really gives an in depth revision of the concepts I have studied and applied for my courses. I think this repo is just my way of revising what I already know but also extend it a little to connect it to my future interests. I wanted to take the theory from lectures, actually see it by simulating it, break it (trust me, many times) and connect it to something real. Every experiment is just a step towards bridging the gap between theory and practice. That is why I ended with a pairs trading stategy that I got the opportunity to learn nicely about through this repo.
 
 ---
 
@@ -14,7 +14,7 @@ Having extensively studied the theory behind Brownian Motions and taken many cou
 | 4 | Universality | QV → T for any increment distribution | Holds for 4 distributions | ![](plots/universality_quadratic_variation.png) |
 | 5 | OU exact vs Euler | Euler valid when dt << 1/θ | Mean error = 0.363 | ![](plots/ou_exact_vs_euler.png) |
 | 6 | Same stationary dist., different dynamics | Stationary variance alone is not enough | θ=1 vs θ=5, same σ²/2θ | ![](plots/ou_same_stationary.png) |
-| 7 | Covariance decay | Cov decays as e^{−θτ}, half-life = log(2)/θ | Half-life = 37.7 days | ![](plots/ou_covariance_decay.png) |
+| 7 | Covariance decay | Cov decays as e^{−θτ}, half-life = log(2)/θ | For θ=5, Half-life = 37.7 days | ![](plots/ou_covariance_decay.png) |
 | 8 | Ergodicity | Time average converges to μ regardless of any start | 5.6% error at T=50 | ![](plots/ou_running_average.png) |
 | 9 | Pairs trading backtest | OU spread strategy over 5 year simulation | Sharpe 1.48, hit rate 91.7% | ![](plots/pairs_trading_pnl.png) |
 
@@ -24,13 +24,13 @@ Having extensively studied the theory behind Brownian Motions and taken many cou
 
 | Experiment | Parameters | Output |
 |---|---|---|
-| Pathwise convergence | n = 10 → 500, 1000 MC trials | Sup-error = 0.054 at n=500 · rate ~ n^{−0.51} |
-| Quadratic variation | Rademacher increments, n = 10,000 | QV = 0.500 = T · TV diverges to ~100 |
+| Pathwise convergence | n = 10 → 500, 1000 MC trials | sup error = 0.054 at n=500 , rate ~ n^{−0.51} |
+| Quadratic variation | Rademacher increments, n = 10,000 | QV = T = 0.5 , TV diverges to ~100 |
 | Universality | 4 distributions, n = 10,000 | QV → T = 0.5 in all cases |
-| OU Euler vs Exact | n=5000 steps, T=5, dt=0.001 | Mean absolute error = 0.363 · max error = 1.275 |
-| Ergodicity | x₀=10, μ=1, T=50 | Running average = 1.056 · relative error 5.6% |
-| GBM | S₀=100, μ=10%, σ=20%, T=1yr | E[S_T] theoretical = 110.52 · empirical = 114.36 |
-| **Pairs trading** | **θ=5.0, σ=0.5, k=1.2, T=5yr** | **Sharpe = 1.48 · hit rate = 91.7% · 12 trades** |
+| OU Euler vs Exact | n=5000 steps, T=5, dt=0.001 | mean absolute error = 0.363 , max error = 1.275 |
+| Ergodicity | x₀=10, μ=1, T=50 | running average = 1.056 , relative error = 5.6% |
+| GBM | S₀=100, μ=10%, σ=20%, T=1yr | E[S_T] theoretical = 110.52 , empirical = 114.36 |
+| Pairs trading | θ=5.0, σ=0.5, k=1.2, T=5yr | sharpe = 1.48 , hit rate = 91.7% , 12 trades executed |
 
 ---
 
@@ -66,7 +66,7 @@ Having extensively studied the theory behind Brownian Motions and taken many cou
 - **Total variation diverges** as n → ∞. Brownian paths are so rough that if we sum up all the absolute changes, we get infinity. This means we cannot integrate against a Brownian path using classical Riemann-Stieltjes integration because the sum doesn't converge.
 - **Quadratic variation converges to T**. So instead of summing |ΔX|, we sum squared changes (ΔX)². This converges to T (finite) as so is super helpful.
 
-If I stop and think about Itô's lemma for a sec. When we apply chain rule to BM, the (dW)² becomes equal to dt. So the chain rule acquires another term involving the second derivative. It is the reason the σ²/2 term appears in the GBM formula.This convergence of quadratic variation is evidently fundamental to stochastic calculus.
+If I stop and think about Itô's lemma for a sec. When we apply chain rule to BM, the (dW)² becomes equal to dt. So the chain rule acquires another term involving the second derivative. It is the reason the σ²/2 term appears in the GBM formula. This convergence of quadratic variation is fundamental to stochastic calculus.
 
 **Result:** Here I take Rademacher increments rescaled by 1/√n. At n=10,000: **QV = 0.500 = T** · **TV diverges to ~100**.
 
@@ -118,7 +118,9 @@ Error is O(√dt), acceptable when dt << 1/θ.
 
 Blue is exact. Red is Euler. Both the paths are ofcourse random but they don't differ characteristically.
 
-**Result:** n=5000 steps, T=5, dt=0.001, 1/θ=0.5. Mean absolute error = **0.363**, max error = **1.275**. Note: this error reflects independent random draws between the two schemes rather than the same BM increments — a fair comparison requires matching the underlying noise, but ofcourse that is no possible because it noise. Nonetheless, when the same increments are used, Euler error reduces to O(dt) as expected.
+**Result:** n=5000 steps, T=5, dt=0.001, 1/θ=0.5. Mean absolute error = **0.363**, max error = **1.275**. 
+
+Note: this error reflects independent random draws between the two schemes rather than the same BM increments. A fair comparison requires matching the underlying noise, but ofcourse that is not possible because noise is random, so they can't be matched. Nonetheless, when the same increments are used, Euler error reduces to O(dt) as expected.
 
 ---
 
@@ -170,7 +172,7 @@ Here, I start at x₀=10 with true mean μ=1 and running for T=50.
 |---|---|
 | ![Ergodic Trajectory](plots/ou_ergodic_trajectory.png) | ![Running Average](plots/ou_running_average.png) |
 
-**Result:** Running average at T=50 is **1.056**, a relative error of **5.6%** from the true mean μ=1.0. The initial condition x₀=10 is forgotten within some time. This property justifies maximum likelihood estimation of θ, μ, σ from a single historical time series. I learnt that this is how OU parameters are calibrated in practice before putting on a pairs trade.
+**Result:** Running average at T=50 is **1.056**, a relative error of **5.6%** from the true mean μ=1.0. The initial condition x₀=10 is forgotten within some time. This property justifies maximum likelihood estimation of θ, μ, σ from a single historical time series. Sommething new I learnt is that this is how OU parameters are calibrated in practice before putting on a pairs trade.
 
 ---
 
@@ -230,7 +232,7 @@ Note: This example uses synthetic data generated from an OU process. Real-world 
 
 ## Takeaways
 
-Apart from the things I already learnt in college, the following are somme valuable things I learnt in this repo:
+Apart from the things I already learnt in college, the following are some valuable things I learnt in this repo:
 - Cov(X_s, X_{s+τ}) = (σ²/2θ)·e^{−θτ}. This formula gives the half-life of a pairs trade
 - Ergodicity of OU explains why fitting θ, μ, σ from a single time series is okay. 
 - Pairs trading was an alien concept for me, but now I understand the undelying principles behind it. 
